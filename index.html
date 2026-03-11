@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axosomatic NetZero Carbon Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f0a;
+    --bg2: #111811;
+    --bg3: #161e16;
+    --card: #1a231a;
+    --card2: #1f2a1f;
+    --border: #2a3a2a;
+    --green: #4ade80;
+    --green2: #22c55e;
+    --green-dim: #166534;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --teal: #2dd4bf;
+    --text: #e8f0e8;
+    --text2: #9ab09a;
+    --text3: #5a7a5a;
+    --accent: #4ade80;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 50% at 10% 20%, rgba(74,222,128,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 80%, rgba(45,212,191,0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+  }
+
+  .logo {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .logo-mark {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--green);
+    letter-spacing: -0.3px;
+  }
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .nav-section {
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+  .nav-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0 12px;
+    margin-bottom: 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .nav-item:hover { background: var(--card); color: var(--text); }
+  .nav-item.active {
+    background: rgba(74,222,128,0.08);
+    color: var(--green);
+    border-color: rgba(74,222,128,0.15);
+  }
+  .nav-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+  .nav-item.active .dot { opacity: 1; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+  }
+  .refresh-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+  }
+  .refresh-time {
+    color: var(--green);
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  /* MAIN */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .page-title span { color: var(--green); font-style: italic; }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 6px;
+  }
+  .filter-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .filter-btn:hover { border-color: var(--green); color: var(--green); }
+  .filter-btn.active {
+    background: rgba(74,222,128,0.1);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .page-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--card);
+    border-radius: 8px;
+    padding: 3px;
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Instrument Sans', sans-serif;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    background: var(--card2);
+    color: var(--text);
+  }
+
+  /* CONTENT */
+  .content { padding: 28px 32px; flex: 1; }
+
+  /* KPI ROW */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.1s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+  .kpi-card:nth-child(4) { animation-delay: 0.2s; }
+  .kpi-card:hover { border-color: var(--green-dim); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--kpi-color, var(--green));
+    opacity: 0.6;
+  }
+
+  .kpi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .kpi-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--text);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .kpi-unit {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    margin-left: 4px;
+  }
+  .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .kpi-delta.good { background: rgba(74,222,128,0.1); color: var(--green); }
+  .kpi-delta.bad { background: rgba(248,113,113,0.1); color: var(--red); }
+  .kpi-delta.warn { background: rgba(251,191,36,0.1); color: var(--amber); }
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 6px;
+  }
+
+  /* CHART GRID */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s ease 0.25s both;
+  }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+  .chart-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+  }
+  .chart-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    letter-spacing: 0.5px;
+  }
+
+  .chart-wrap { position: relative; }
+
+  /* BOTTOM GRID */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    animation: fadeUp 0.4s ease 0.35s both;
+  }
+
+  /* SCOPE TABLE */
+  .scope-table { width: 100%; }
+  .scope-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .scope-row:last-child { border-bottom: none; }
+  .scope-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    width: 60px;
+    flex-shrink: 0;
+  }
+  .scope-desc {
+    font-size: 11px;
+    color: var(--text3);
+    flex: 1;
+    font-family: 'DM Mono', monospace;
+  }
+  .scope-bar-wrap {
+    width: 80px;
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .scope-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--bar-color, var(--green));
+  }
+  .scope-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    width: 70px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .scope-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* SITE TABLE */
+  .site-list { display: flex; flex-direction: column; gap: 8px; }
+  .site-item {
+    background: var(--bg3);
+    border-radius: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    transition: border-color 0.15s;
+  }
+  .site-item:hover { border-color: var(--green-dim); }
+  .site-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .site-name { font-size: 13px; font-weight: 500; }
+  .site-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .site-progress {
+    height: 3px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .site-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--fill-color, var(--green));
+  }
+  .site-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+  }
+  .site-target { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+  /* TARGET GAUGE */
+  .gauge-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0 0;
+  }
+  .gauge-svg { overflow: visible; }
+  .gauge-center {
+    text-align: center;
+    margin-top: -10px;
+  }
+  .gauge-pct {
+    font-family: 'DM Serif Display', serif;
+    font-size: 38px;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+  .gauge-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .gauge-targets {
+    width: 100%;
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .gauge-target-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .gauge-target-label { color: var(--text2); }
+  .gauge-target-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+
+  /* PAGE VIEWS */
+  .page-view { display: none; }
+  .page-view.active { display: block; }
+
+  /* INTENSITY PAGE */
+  .intensity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .intensity-full {
+    grid-column: 1 / -1;
+  }
+
+  /* WATERFALL TABLE for detail page */
+  .waterfall-table { width: 100%; border-collapse: collapse; }
+  .waterfall-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .waterfall-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(42,58,42,0.5);
+  }
+  .waterfall-table tr:last-child td { border-bottom: none; }
+  .waterfall-table tr:hover td { background: var(--bg3); }
+  .change-pos { color: var(--red); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .change-neg { color: var(--green); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .val-mono { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text2); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-mark" style="font-size:15px;">Axosomatic</div>
+      <div class="logo-sub">NetZero Carbon Intelligence</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Analytics</div>
+      <div class="nav-item active" onclick="switchPage('executive')">
+        <div class="dot"></div> Executive Summary
+      </div>
+      <div class="nav-item" onclick="switchPage('detail')">
+        <div class="dot"></div> Emissions Detail
+      </div>
+      <div class="nav-item" onclick="switchPage('intensity')">
+        <div class="dot"></div> Operational Intensity
+      </div>
+    </div>
+
+    <div class="nav-section" style="margin-top: 16px;">
+      <div class="nav-label">Targets</div>
+      <div class="nav-item" onclick="switchPage('targets')">
+        <div class="dot"></div> Progress Tracker
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="refresh-tag">LAST REFRESHED</div>
+      <div class="refresh-time">Mar 11, 2026 · 08:00</div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="pageTitle">Executive <span>Summary</span></div>
+      <div class="topbar-right">
+        <div class="filter-group" id="yearFilters">
+          <button class="filter-btn" onclick="setYear(2023, this)">2023</button>
+          <button class="filter-btn" onclick="setYear(2024, this)">2024</button>
+          <button class="filter-btn active" onclick="setYear(2025, this)">2025</button>
+        </div>
+        <div class="page-tabs">
+          <button class="tab-btn active" onclick="switchPage('executive')">Overview</button>
+          <button class="tab-btn" onclick="switchPage('detail')">Detail</button>
+          <button class="tab-btn" onclick="switchPage('intensity')">Intensity</button>
+          <button class="tab-btn" onclick="switchPage('targets')">Targets</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- PAGE 1: EXECUTIVE SUMMARY -->
+      <div class="page-view active" id="page-executive">
+
+        <div class="kpi-row">
+          <div class="kpi-card" style="--kpi-color: #4ade80">
+            <div class="kpi-label">Total Emissions YTD</div>
+            <div class="kpi-value"><span id="kpi-total">48,320</span><span class="kpi-unit">tCO₂e</span></div>
+            <span class="kpi-delta good" id="kpi-total-delta">↓ 12.4% vs 2024</span>
+            <div class="kpi-sub">Target: 45,000 tCO₂e</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #60a5fa">
+            <div class="kpi-label">Scope 1 Emissions</div>
+            <div class="kpi-value"><span id="kpi-s1">8,940</span><span class="kpi-unit">tCO₂e</span></div>
+            <span class="kpi-delta good" id="kpi-s1-delta">↓ 8.1% YoY</span>
+            <div class="kpi-sub">Direct combustion &amp; fleet</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #2dd4bf">
+            <div class="kpi-label">Scope 2 Emissions</div>
+            <div class="kpi-value"><span id="kpi-s2">11,280</span><span class="kpi-unit">tCO₂e</span></div>
+            <span class="kpi-delta good" id="kpi-s2-delta">↓ 19.3% YoY</span>
+            <div class="kpi-sub">Purchased electricity</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #fbbf24">
+            <div class="kpi-label">Scope 3 Emissions</div>
+            <div class="kpi-value"><span id="kpi-s3">28,100</span><span class="kpi-unit">tCO₂e</span></div>
+            <span class="kpi-delta warn" id="kpi-s3-delta">↓ 9.6% YoY</span>
+            <div class="kpi-sub">Value chain emissions</div>
+          </div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Monthly Emissions vs. Target</div>
+                <div class="chart-subtitle">TOTAL tCO₂e · ALL SCOPES · 2025</div>
+              </div>
+              <div class="chart-badge">MONTHLY</div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="trendChart" height="200"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Scope Breakdown</div>
+                <div class="chart-subtitle">% CONTRIBUTION · YTD 2025</div>
+              </div>
+            </div>
+            <div class="chart-wrap" style="display:flex; justify-content:center;">
+              <canvas id="scopeDonut" height="180" width="180"></canvas>
+            </div>
+            <div style="margin-top: 14px;">
+              <div class="scope-row">
+                <div class="scope-name" style="color: #60a5fa;">Scope 1</div>
+                <div class="scope-bar-wrap"><div class="scope-bar" id="scope-s1-bar" style="--bar-color: #60a5fa; width: 19%"></div></div>
+                <div class="scope-val" id="scope-s1-val">8,940</div>
+                <div class="scope-pct" id="scope-s1-pct">18.5%</div>
+              </div>
+              <div class="scope-row">
+                <div class="scope-name" style="color: #2dd4bf;">Scope 2</div>
+                <div class="scope-bar-wrap"><div class="scope-bar" id="scope-s2-bar" style="--bar-color: #2dd4bf; width: 23%"></div></div>
+                <div class="scope-val" id="scope-s2-val">11,280</div>
+                <div class="scope-pct" id="scope-s2-pct">23.3%</div>
+              </div>
+              <div class="scope-row">
+                <div class="scope-name" style="color: #fbbf24;">Scope 3</div>
+                <div class="scope-bar-wrap"><div class="scope-bar" id="scope-s3-bar" style="--bar-color: #fbbf24; width: 58%"></div></div>
+                <div class="scope-val" id="scope-s3-val">28,100</div>
+                <div class="scope-pct" id="scope-s3-pct">58.2%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Emissions by Site</div>
+                <div class="chart-subtitle">tCO₂e vs SITE TARGET · YTD</div>
+              </div>
+            </div>
+            <div class="site-list">
+              <div class="site-item">
+                <div class="site-top">
+                  <span class="site-name">HQ — Austin, TX</span>
+                  <span class="site-val">14,200 tCO₂e</span>
+                </div>
+                <div class="site-progress"><div class="site-progress-fill" style="width: 94%; --fill-color: #fbbf24;"></div></div>
+                <div class="site-meta">
+                  <span class="site-target">Target: 15,100</span>
+                  <span class="site-target" style="color: #fbbf24;">94% of target</span>
+                </div>
+              </div>
+              <div class="site-item">
+                <div class="site-top">
+                  <span class="site-name">Plant — Detroit, MI</span>
+                  <span class="site-val">18,640 tCO₂e</span>
+                </div>
+                <div class="site-progress"><div class="site-progress-fill" style="width: 79%; --fill-color: #4ade80;"></div></div>
+                <div class="site-meta">
+                  <span class="site-target">Target: 23,600</span>
+                  <span class="site-target" style="color: #4ade80;">79% — on track</span>
+                </div>
+              </div>
+              <div class="site-item">
+                <div class="site-top">
+                  <span class="site-name">Warehouse — Dallas, TX</span>
+                  <span class="site-val">9,840 tCO₂e</span>
+                </div>
+                <div class="site-progress"><div class="site-progress-fill" style="width: 110%; --fill-color: #f87171;"></div></div>
+                <div class="site-meta">
+                  <span class="site-target">Target: 8,900</span>
+                  <span class="site-target" style="color: #f87171;">↑ 10.6% over target</span>
+                </div>
+              </div>
+              <div class="site-item">
+                <div class="site-top">
+                  <span class="site-name">Office — Chicago, IL</span>
+                  <span class="site-val">5,640 tCO₂e</span>
+                </div>
+                <div class="site-progress"><div class="site-progress-fill" style="width: 65%; --fill-color: #4ade80;"></div></div>
+                <div class="site-meta">
+                  <span class="site-target">Target: 8,600</span>
+                  <span class="site-target" style="color: #4ade80;">65% — well under</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">YoY Change by Category</div>
+                <div class="chart-subtitle">tCO₂e DELTA · 2024 vs 2025</div>
+              </div>
+            </div>
+            <canvas id="waterfallChart" height="240"></canvas>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Annual Target Progress</div>
+                <div class="chart-subtitle">2025 REDUCTION GOAL</div>
+              </div>
+            </div>
+            <div class="gauge-wrap">
+              <svg class="gauge-svg" width="200" height="120" viewBox="0 0 200 120">
+                <defs>
+                  <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#4ade80"/>
+                    <stop offset="100%" style="stop-color:#2dd4bf"/>
+                  </linearGradient>
+                </defs>
+                <!-- Background arc -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1f2a1f" stroke-width="14" stroke-linecap="round"/>
+                <!-- Progress arc (72% = 0.72 * 180deg) -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"
+                  stroke-dasharray="251.2" stroke-dashoffset="70.3"/>
+                <!-- Target marker at 100% -->
+                <circle cx="180" cy="100" r="5" fill="#4ade80" opacity="0.4"/>
+                <!-- Needle -->
+                <circle cx="100" cy="100" r="6" fill="#1a231a" stroke="#4ade80" stroke-width="2"/>
+                <line x1="100" y1="100" x2="57" y2="45" stroke="#4ade80" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-pct">72%</div>
+                <div class="gauge-label">of 2025 target used</div>
+              </div>
+              <div class="gauge-targets">
+                <div class="gauge-target-row">
+                  <span class="gauge-target-label">2025 Target</span>
+                  <span class="gauge-target-val" style="color: var(--green);">45,000 tCO₂e</span>
+                </div>
+                <div class="gauge-target-row">
+                  <span class="gauge-target-label">Current YTD</span>
+                  <span class="gauge-target-val" style="color: var(--text2);">48,320 tCO₂e</span>
+                </div>
+                <div class="gauge-target-row">
+                  <span class="gauge-target-label">Remaining Headroom</span>
+                  <span class="gauge-target-val" style="color: var(--red);">−3,320 over</span>
+                </div>
+                <div class="gauge-target-row">
+                  <span class="gauge-target-label">Baseline (2022)</span>
+                  <span class="gauge-target-val" style="color: var(--text3);">68,500 tCO₂e</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end executive page -->
+
+      <!-- PAGE 2: EMISSIONS DETAIL -->
+      <div class="page-view" id="page-detail">
+        <div class="kpi-row">
+          <div class="kpi-card" style="--kpi-color: #60a5fa">
+            <div class="kpi-label">Scope 1 — Stationary</div>
+            <div class="kpi-value">5,240<span class="kpi-unit">tCO₂e</span></div>
+            <span class="kpi-delta good">↓ 6.2% YoY</span>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #818cf8">
+            <div class="kpi-label">Scope 1 — Mobile</div>
+            <div class="kpi-value">3,700<span class="kpi-unit">tCO₂e</span></div>
+            <span class="kpi-delta good">↓ 10.8% YoY</span>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #2dd4bf">
+            <div class="kpi-label">Scope 2 — Location</div>
+            <div class="kpi-value">14,100<span class="kpi-unit">tCO₂e</span></div>
+            <span class="kpi-delta good">↓ 22.1% YoY</span>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #34d399">
+            <div class="kpi-label">Scope 2 — Market</div>
+            <div class="kpi-value">11,280<span class="kpi-unit">tCO₂e</span></div>
+            <span class="kpi-delta good">↓ 19.3% YoY</span>
+          </div>
+        </div>
+
+        <div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Emissions by Scope & Month</div>
+                <div class="chart-subtitle">STACKED · tCO₂e · 2025</div>
+              </div>
+            </div>
+            <canvas id="stackedBar" height="220"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Scope 3 Category Breakdown</div>
+                <div class="chart-subtitle">tCO₂e BY CATEGORY</div>
+              </div>
+            </div>
+            <canvas id="scope3Bar" height="220"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card" style="margin-top: 16px;">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Detailed Emissions by Category</div>
+              <div class="chart-subtitle">YTD 2025 vs 2024 · ALL SCOPES</div>
+            </div>
+          </div>
+          <table class="waterfall-table">
+            <thead>
+              <tr>
+                <th>Scope</th>
+                <th>Category</th>
+                <th>2024 (tCO₂e)</th>
+                <th>2025 YTD (tCO₂e)</th>
+                <th>Change</th>
+                <th>% Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="color:var(--blue)">Scope 1</td><td>Stationary Combustion</td><td class="val-mono">5,590</td><td class="val-mono">5,240</td><td class="change-neg">↓ 350</td><td class="change-neg">-6.3%</td></tr>
+              <tr><td style="color:var(--blue)">Scope 1</td><td>Mobile Combustion / Fleet</td><td class="val-mono">4,150</td><td class="val-mono">3,700</td><td class="change-neg">↓ 450</td><td class="change-neg">-10.8%</td></tr>
+              <tr><td style="color:var(--teal)">Scope 2</td><td>Purchased Electricity (market)</td><td class="val-mono">13,970</td><td class="val-mono">11,280</td><td class="change-neg">↓ 2,690</td><td class="change-neg">-19.3%</td></tr>
+              <tr><td style="color:var(--amber)">Scope 3</td><td>Purchased Goods & Services</td><td class="val-mono">12,400</td><td class="val-mono">11,900</td><td class="change-neg">↓ 500</td><td class="change-neg">-4.0%</td></tr>
+              <tr><td style="color:var(--amber)">Scope 3</td><td>Business Travel</td><td class="val-mono">3,200</td><td class="val-mono">3,600</td><td class="change-pos">↑ 400</td><td class="change-pos">+12.5%</td></tr>
+              <tr><td style="color:var(--amber)">Scope 3</td><td>Employee Commuting</td><td class="val-mono">4,100</td><td class="val-mono">3,900</td><td class="change-neg">↓ 200</td><td class="change-neg">-4.9%</td></tr>
+              <tr><td style="color:var(--amber)">Scope 3</td><td>Waste Generated</td><td class="val-mono">2,800</td><td class="val-mono">2,600</td><td class="change-neg">↓ 200</td><td class="change-neg">-7.1%</td></tr>
+              <tr><td style="color:var(--amber)">Scope 3</td><td>Upstream Transport</td><td class="val-mono">6,400</td><td class="val-mono">6,100</td><td class="change-neg">↓ 300</td><td class="change-neg">-4.7%</td></tr>
+              <tr style="border-top: 1px solid var(--green-dim)"><td colspan="2" style="font-weight:600">Total</td><td class="val-mono" style="font-weight:600">55,110</td><td class="val-mono" style="color:var(--green); font-weight:600">48,320</td><td class="change-neg" style="font-size:13px">↓ 6,790</td><td class="change-neg" style="font-size:13px">-12.3%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAGE 3: OPERATIONAL INTENSITY -->
+      <div class="page-view" id="page-intensity">
+        <div class="kpi-row">
+          <div class="kpi-card" style="--kpi-color: #4ade80">
+            <div class="kpi-label">Emissions / Unit Produced</div>
+            <div class="kpi-value">0.84<span class="kpi-unit">tCO₂e/unit</span></div>
+            <span class="kpi-delta good">↓ 18.4% YoY</span>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #60a5fa">
+            <div class="kpi-label">Emissions / Employee</div>
+            <div class="kpi-value">16.2<span class="kpi-unit">tCO₂e/FTE</span></div>
+            <span class="kpi-delta good">↓ 14.2% YoY</span>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #2dd4bf">
+            <div class="kpi-label">Emissions / $M Revenue</div>
+            <div class="kpi-value">9.4<span class="kpi-unit">tCO₂e/$M</span></div>
+            <span class="kpi-delta good">↓ 21.7% YoY</span>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #fbbf24">
+            <div class="kpi-label">Energy Consumption</div>
+            <div class="kpi-value">142K<span class="kpi-unit">MWh</span></div>
+            <span class="kpi-delta good">↓ 9.1% YoY</span>
+          </div>
+        </div>
+
+        <div class="intensity-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Emissions Intensity — Per Unit Produced</div>
+                <div class="chart-subtitle">tCO₂e / UNIT · MONTHLY TREND</div>
+              </div>
+            </div>
+            <canvas id="intensityChart" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Site Efficiency Scatter</div>
+                <div class="chart-subtitle">EMISSIONS vs PRODUCTION VOLUME</div>
+              </div>
+            </div>
+            <canvas id="scatterChart" height="200"></canvas>
+          </div>
+          <div class="chart-card intensity-full">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Energy vs Emissions Correlation</div>
+                <div class="chart-subtitle">MWh CONSUMPTION vs tCO₂e · MONTHLY 2025</div>
+              </div>
+            </div>
+            <canvas id="energyEmissionsChart" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE 4: TARGETS -->
+      <div class="page-view" id="page-targets">
+        <div class="kpi-row">
+          <div class="kpi-card" style="--kpi-color: #4ade80">
+            <div class="kpi-label">Baseline Year</div>
+            <div class="kpi-value">68,500<span class="kpi-unit">tCO₂e</span></div>
+            <div class="kpi-sub">Reference year: 2022</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #60a5fa">
+            <div class="kpi-label">Cumulative Reduction</div>
+            <div class="kpi-value">29.4<span class="kpi-unit">%</span></div>
+            <span class="kpi-delta good">↓ vs 2022 baseline</span>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #2dd4bf">
+            <div class="kpi-label">2030 Target</div>
+            <div class="kpi-value">34,250<span class="kpi-unit">tCO₂e</span></div>
+            <div class="kpi-sub">50% reduction from baseline</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color: #fbbf24">
+            <div class="kpi-label">Net Zero Target</div>
+            <div class="kpi-value">2045</div>
+            <div class="kpi-sub">Science-based target</div>
+          </div>
+        </div>
+
+        <div class="chart-grid" style="grid-template-columns: 2fr 1fr;">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Reduction Pathway — Actual vs. Target</div>
+                <div class="chart-subtitle">tCO₂e · 2022–2030 · WITH FORECAST</div>
+              </div>
+              <div class="chart-badge">SBT ALIGNED</div>
+            </div>
+            <canvas id="pathwayChart" height="230"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Annual Target vs Actual</div>
+                <div class="chart-subtitle">PER YEAR PERFORMANCE</div>
+              </div>
+            </div>
+            <canvas id="annualBar" height="230"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card" style="margin-top: 16px;">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Target Scorecard by Scope</div>
+              <div class="chart-subtitle">ANNUAL PROGRESS AGAINST SCOPE-LEVEL TARGETS</div>
+            </div>
+          </div>
+          <table class="waterfall-table">
+            <thead>
+              <tr>
+                <th>Scope</th>
+                <th>2022 Baseline</th>
+                <th>2025 Target</th>
+                <th>2025 Actual</th>
+                <th>vs Target</th>
+                <th>2030 Target</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--blue)">Scope 1</td>
+                <td class="val-mono">13,200</td>
+                <td class="val-mono">10,560</td>
+                <td class="val-mono">8,940</td>
+                <td class="change-neg">↓ 1,620 under</td>
+                <td class="val-mono">6,600</td>
+                <td><span style="color:var(--green); font-size:12px; font-family:'DM Mono',monospace;">✓ ON TRACK</span></td>
+              </tr>
+              <tr>
+                <td style="color:var(--teal)">Scope 2</td>
+                <td class="val-mono">18,300</td>
+                <td class="val-mono">13,725</td>
+                <td class="val-mono">11,280</td>
+                <td class="change-neg">↓ 2,445 under</td>
+                <td class="val-mono">9,150</td>
+                <td><span style="color:var(--green); font-size:12px; font-family:'DM Mono',monospace;">✓ AHEAD</span></td>
+              </tr>
+              <tr>
+                <td style="color:var(--amber)">Scope 3</td>
+                <td class="val-mono">37,000</td>
+                <td class="val-mono">29,600</td>
+                <td class="val-mono">28,100</td>
+                <td class="change-neg">↓ 1,500 under</td>
+                <td class="val-mono">18,500</td>
+                <td><span style="color:var(--amber); font-size:12px; font-family:'DM Mono',monospace;">~ ON TRACK</span></td>
+              </tr>
+              <tr style="border-top: 1px solid var(--green-dim)">
+                <td style="font-weight:600">Total</td>
+                <td class="val-mono" style="font-weight:600">68,500</td>
+                <td class="val-mono" style="font-weight:600">53,885</td>
+                <td class="val-mono" style="color:var(--green); font-weight:600">48,320</td>
+                <td class="change-neg" style="font-size:13px">↓ 5,565 under</td>
+                <td class="val-mono" style="font-weight:600">34,250</td>
+                <td><span style="color:var(--green); font-size:13px; font-family:'DM Mono',monospace;">✓ ON TRACK</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end main -->
+</div><!-- end layout -->
+
+<script>
+// ─── MULTI-YEAR DATA ────────────────────────────────────────────────────────
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+Chart.defaults.color = '#5a7a5a';
+Chart.defaults.borderColor = '#2a3a2a';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 10;
+
+const cfg = {
+  plugins: { legend: { display: false }, tooltip: {
+    backgroundColor: '#1a231a', borderColor: '#2a3a2a', borderWidth: 1,
+    titleColor: '#9ab09a', bodyColor: '#e8f0e8', padding: 10,
+  }}
+};
+
+const yearData = {
+  2023: {
+    total: 62100, s1: 10200, s2: 15400, s3: 36500,
+    monthly:      [5500,5300,5250,5150,5300,5180,5050,5100,5200,5080,5020,4970],
+    targetLine:   [5800,5700,5600,5550,5480,5400,5320,5260,5200,5140,5080,5020],
+    s1monthly:    [890,860,865,845,870,855,820,830,840,820,815,790],
+    s2monthly:    [1350,1300,1290,1260,1310,1280,1220,1240,1260,1230,1220,1190],
+    s3monthly:    [3260,3140,3095,3045,3120,3045,3010,3030,3100,3030,2985,2990],
+    scope3cats:   [14800,7800,5100,4600,4200],
+    waterfall:    [-420,-580,-1200,-620,520,-280,-340,-480],
+    intensity:    [1.28,1.24,1.22,1.19,1.21,1.18,1.15,1.16,1.18,1.15,1.14,1.12],
+    intensityTgt: [1.30,1.27,1.24,1.21,1.18,1.15,1.12,1.10,1.08,1.06,1.04,1.02],
+    energyMWh:    [1520,1470,1460,1430,1480,1450,1390,1410,1430,1400,1390,1360],
+    scatterSites: [{x:62000,y:17100},{x:98000,y:22800},{x:41000,y:12600},{x:24000,y:7400}],
+    kpiYoY: { total:'-9.3%', s1:'-10.1%', s2:'-16.4%', s3:'-6.8%' },
+    kpiSign: { total:'good', s1:'good', s2:'good', s3:'good' },
+    prevTotal: 68500,
+  },
+  2024: {
+    total: 55110, s1: 9730, s2: 13970, s3: 31410,
+    monthly:      [4900,4720,4780,4640,4820,4700,4510,4560,4640,4510,4450,4380],
+    targetLine:   [5200,5100,5000,4950,4880,4800,4720,4660,4600,4540,4480,4420],
+    s1monthly:    [845,815,820,800,835,815,775,785,795,770,765,740],
+    s2monthly:    [1210,1170,1185,1150,1195,1165,1110,1125,1140,1110,1100,1065],
+    s3monthly:    [2845,2735,2775,2690,2790,2720,2625,2650,2705,2630,2585,2575],
+    scope3cats:   [13200,7100,4700,4100,3310],
+    waterfall:    [-390,-470,-1430,-560,-80,-240,-220,-350],
+    intensity:    [1.14,1.10,1.08,1.05,1.07,1.04,1.00,1.01,1.03,1.00,0.98,0.96],
+    intensityTgt: [1.12,1.09,1.06,1.03,1.00,0.97,0.95,0.93,0.91,0.89,0.87,0.85],
+    energyMWh:    [1380,1330,1345,1310,1350,1320,1260,1280,1295,1260,1250,1225],
+    scatterSites: [{x:59500,y:15800},{x:95000,y:21000},{x:39500,y:11200},{x:23000,y:6700}],
+    kpiYoY: { total:'-11.3%', s1:'-4.6%', s2:'-9.3%', s3:'-14.0%' },
+    kpiSign: { total:'good', s1:'good', s2:'good', s3:'good' },
+    prevTotal: 62100,
+  },
+  2025: {
+    total: 48320, s1: 8940, s2: 11280, s3: 28100,
+    monthly:      [4200,4050,4100,3980,4200,4100,3900,3950,4020,3900,3850,3700],
+    targetLine:   [4600,4500,4450,4400,4350,4300,4250,4200,4150,4100,4050,4000],
+    s1monthly:    [780,750,760,740,780,760,710,720,730,700,700,670],
+    s2monthly:    [1020,980,990,960,1010,990,940,950,960,920,910,870],
+    s3monthly:    [2400,2320,2350,2280,2410,2350,2250,2280,2330,2280,2240,2160],
+    scope3cats:   [11900,6100,3900,3600,2600],
+    waterfall:    [-350,-450,-2690,-500,400,-200,-200,-300],
+    intensity:    [1.02,0.98,0.96,0.94,0.93,0.91,0.88,0.87,0.85,0.84,0.82,0.80],
+    intensityTgt: [1.00,0.98,0.96,0.94,0.92,0.90,0.88,0.86,0.84,0.82,0.80,0.78],
+    energyMWh:    [1280,1230,1240,1210,1250,1230,1180,1190,1200,1170,1160,1120],
+    scatterSites: [{x:57600,y:14200},{x:92000,y:18640},{x:38000,y:9840},{x:22000,y:5640}],
+    kpiYoY: { total:'-12.4%', s1:'-8.1%', s2:'-19.3%', s3:'-9.6%' },
+    kpiSign: { total:'good', s1:'good', s2:'good', s3:'warn' },
+    prevTotal: 55110,
+  }
+};
+
+let activeYear = 2025;
+
+// ─── CHART INSTANCES ─────────────────────────────────────────────────────────
+let trendChart, scopeDonut, waterfallChart, stackedBar, scope3Bar,
+    intensityChart, scatterChart, energyEmissionsChart, pathwayChart, annualBar;
+
+function buildCharts(yr) {
+  const d = yearData[yr];
+  const prev = yearData[yr - 1] || yearData[2023];
+
+  // TREND
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'Actual Emissions', data: d.monthly, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.06)', borderWidth: 2, fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#4ade80' },
+        { label: 'Monthly Target', data: d.targetLine, borderColor: '#fbbf24', borderWidth: 1.5, borderDash: [5,4], fill: false, tension: 0.3, pointRadius: 0 }
+      ]
+    },
+    options: { ...cfg, responsive: true, plugins: { ...cfg.plugins, legend: { display: true, labels: { color: '#9ab09a', font: { size: 11 }, boxWidth: 12 } } }, scales: { x: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } }, y: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a', callback: v => v.toLocaleString() } } } }
+  });
+
+  // DONUT
+  if (scopeDonut) scopeDonut.destroy();
+  scopeDonut = new Chart(document.getElementById('scopeDonut'), {
+    type: 'doughnut',
+    data: { labels: ['Scope 1','Scope 2','Scope 3'], datasets: [{ data: [d.s1, d.s2, d.s3], backgroundColor: ['#60a5fa','#2dd4bf','#fbbf24'], borderColor: '#0a0f0a', borderWidth: 3, hoverOffset: 6 }] },
+    options: { ...cfg, cutout: '72%', plugins: { ...cfg.plugins, legend: { display: true, position: 'bottom', labels: { color: '#9ab09a', font: { size: 11 }, boxWidth: 10, padding: 12 } } } }
+  });
+
+  // WATERFALL
+  if (waterfallChart) waterfallChart.destroy();
+  waterfallChart = new Chart(document.getElementById('waterfallChart'), {
+    type: 'bar',
+    data: { labels: ['Stationary','Fleet','Electricity','Purch. Goods','Biz Travel','Commuting','Waste','Transport'], datasets: [{ label: 'YoY Change (tCO₂e)', data: d.waterfall, backgroundColor: (ctx) => ctx.raw >= 0 ? 'rgba(248,113,113,0.7)' : 'rgba(74,222,128,0.7)', borderColor: (ctx) => ctx.raw >= 0 ? '#f87171' : '#4ade80', borderWidth: 1, borderRadius: 4 }] },
+    options: { ...cfg, indexAxis: 'y', scales: { x: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } }, y: { grid: { display: false }, ticks: { color: '#9ab09a', font: { size: 10 } } } } }
+  });
+
+  // STACKED BAR
+  if (stackedBar) stackedBar.destroy();
+  stackedBar = new Chart(document.getElementById('stackedBar'), {
+    type: 'bar',
+    data: { labels: months, datasets: [
+      { label: 'Scope 1', data: d.s1monthly, backgroundColor: 'rgba(96,165,250,0.75)', borderRadius: 0 },
+      { label: 'Scope 2', data: d.s2monthly, backgroundColor: 'rgba(45,212,191,0.75)', borderRadius: 0 },
+      { label: 'Scope 3', data: d.s3monthly, backgroundColor: 'rgba(251,191,36,0.75)', borderRadius: { topLeft: 4, topRight: 4 } },
+    ]},
+    options: { ...cfg, plugins: { ...cfg.plugins, legend: { display: true, labels: { color: '#9ab09a', font: { size: 11 }, boxWidth: 10 } } }, scales: { x: { stacked: true, grid: { display: false }, ticks: { color: '#5a7a5a' } }, y: { stacked: true, grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } } } }
+  });
+
+  // SCOPE 3
+  if (scope3Bar) scope3Bar.destroy();
+  scope3Bar = new Chart(document.getElementById('scope3Bar'), {
+    type: 'bar',
+    data: { labels: ['Purch. Goods','Upstream Trans.','Employee Comm.','Business Travel','Waste'], datasets: [{ label: 'tCO₂e', data: d.scope3cats, backgroundColor: ['rgba(251,191,36,0.8)','rgba(251,191,36,0.65)','rgba(251,191,36,0.5)','rgba(251,191,36,0.4)','rgba(251,191,36,0.3)'], borderRadius: 4, borderColor: '#fbbf24', borderWidth: 1 }] },
+    options: { ...cfg, indexAxis: 'y', scales: { x: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } }, y: { grid: { display: false }, ticks: { color: '#9ab09a' } } } }
+  });
+
+  // INTENSITY
+  if (intensityChart) intensityChart.destroy();
+  intensityChart = new Chart(document.getElementById('intensityChart'), {
+    type: 'line',
+    data: { labels: months, datasets: [
+      { label: 'Intensity (tCO₂e/unit)', data: d.intensity, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.06)', fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2 },
+      { label: 'Target', data: d.intensityTgt, borderColor: '#fbbf24', borderDash: [5,4], borderWidth: 1.5, fill: false, pointRadius: 0 }
+    ]},
+    options: { ...cfg, plugins: { ...cfg.plugins, legend: { display: true, labels: { color: '#9ab09a', font: { size: 11 }, boxWidth: 10 } } }, scales: { x: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } }, y: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } } } }
+  });
+
+  // SCATTER
+  if (scatterChart) scatterChart.destroy();
+  const siteLabels = ['HQ Austin','Plant Detroit','WH Dallas','Chicago'];
+  scatterChart = new Chart(document.getElementById('scatterChart'), {
+    type: 'scatter',
+    data: { datasets: [{ label: 'Sites', data: d.scatterSites.map((s,i) => ({...s, label: siteLabels[i]})), backgroundColor: ['#fbbf24','#4ade80','#f87171','#60a5fa'], pointRadius: 10, pointHoverRadius: 14 }] },
+    options: { ...cfg, plugins: { ...cfg.plugins, tooltip: { ...cfg.plugins.tooltip, callbacks: { label: (ctx) => { const p = ctx.raw; return [`${p.label}`, `Prod: ${p.x.toLocaleString()} units`, `Emissions: ${p.y.toLocaleString()} tCO₂e`]; } } } }, scales: { x: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' }, title: { display: true, text: 'Production Units', color: '#5a7a5a' } }, y: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' }, title: { display: true, text: 'tCO₂e', color: '#5a7a5a' } } } }
+  });
+
+  // ENERGY VS EMISSIONS
+  if (energyEmissionsChart) energyEmissionsChart.destroy();
+  energyEmissionsChart = new Chart(document.getElementById('energyEmissionsChart'), {
+    type: 'line',
+    data: { labels: months, datasets: [
+      { label: 'Energy (MWh ÷ 10)', data: d.energyMWh, borderColor: '#60a5fa', backgroundColor: 'rgba(96,165,250,0.04)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 },
+      { label: 'Emissions (tCO₂e)', data: d.monthly, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.04)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 }
+    ]},
+    options: { ...cfg, plugins: { ...cfg.plugins, legend: { display: true, labels: { color: '#9ab09a', font: { size: 11 }, boxWidth: 10 } } }, scales: { x: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } }, y: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } } } }
+  });
+
+  // PATHWAY
+  if (pathwayChart) pathwayChart.destroy();
+  pathwayChart = new Chart(document.getElementById('pathwayChart'), {
+    type: 'line',
+    data: { labels: ['2022','2023','2024','2025','2026','2027','2028','2029','2030'], datasets: [
+      { label: 'Actual', data: [68500,62100,55110,48320,null,null,null,null,null], borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.06)', fill: true, tension: 0.3, pointRadius: 4, borderWidth: 2 },
+      { label: 'Forecast', data: [null,null,null,48320,44000,41000,39000,37000,34250], borderColor: '#4ade80', borderDash: [6,4], fill: false, tension: 0.3, pointRadius: 3, borderWidth: 1.5 },
+      { label: 'Target Pathway', data: [68500,61650,54800,47950,44500,41100,38000,36000,34250], borderColor: '#fbbf24', borderDash: [4,3], fill: false, tension: 0.3, pointRadius: 0, borderWidth: 1.5 }
+    ]},
+    options: { ...cfg, plugins: { ...cfg.plugins, legend: { display: true, labels: { color: '#9ab09a', font: { size: 11 }, boxWidth: 10 } } }, scales: { x: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a' } }, y: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a', callback: v => (v/1000).toFixed(0) + 'K' } } } }
+  });
+
+  // ANNUAL BAR
+  if (annualBar) annualBar.destroy();
+  annualBar = new Chart(document.getElementById('annualBar'), {
+    type: 'bar',
+    data: { labels: ['2022','2023','2024','2025'], datasets: [
+      { label: 'Target', data: [68500,61650,54800,53885], backgroundColor: 'rgba(251,191,36,0.2)', borderColor: '#fbbf24', borderWidth: 1.5, borderRadius: 4 },
+      { label: 'Actual', data: [68500,62100,55110,48320], backgroundColor: (ctx) => ctx.dataIndex === 3 ? 'rgba(74,222,128,0.7)' : 'rgba(96,165,250,0.6)', borderColor: (ctx) => ctx.dataIndex === 3 ? '#4ade80' : '#60a5fa', borderWidth: 1, borderRadius: 4 }
+    ]},
+    options: { ...cfg, plugins: { ...cfg.plugins, legend: { display: true, labels: { color: '#9ab09a', font: { size: 11 }, boxWidth: 10 } } }, scales: { x: { grid: { display: false }, ticks: { color: '#5a7a5a' } }, y: { grid: { color: '#1f2a1f' }, ticks: { color: '#5a7a5a', callback: v => (v/1000).toFixed(0) + 'K' } } } }
+  });
+
+  // ─── UPDATE KPI CARDS ───────────────────────────────────────────────────────
+  const prevYr = yr === 2023 ? 2022 : yearData[yr-1];
+  const prevTot = yr === 2023 ? 68500 : yearData[yr-1].total;
+  const pctChange = (((d.total - prevTot) / prevTot) * 100).toFixed(1);
+
+  document.getElementById('kpi-total').textContent = d.total.toLocaleString();
+  document.getElementById('kpi-s1').textContent = d.s1.toLocaleString();
+  document.getElementById('kpi-s2').textContent = d.s2.toLocaleString();
+  document.getElementById('kpi-s3').textContent = d.s3.toLocaleString();
+
+  document.getElementById('kpi-total-delta').textContent = `↓ ${Math.abs(pctChange)}% vs ${yr-1}`;
+  document.getElementById('kpi-s1-delta').textContent = `↓ ${d.kpiYoY.s1.replace('-','')} YoY`;
+  document.getElementById('kpi-s2-delta').textContent = `↓ ${d.kpiYoY.s2.replace('-','')} YoY`;
+  document.getElementById('kpi-s3-delta').textContent = `↓ ${d.kpiYoY.s3.replace('-','')} YoY`;
+
+  // Update scope legend bars
+  const total = d.s1 + d.s2 + d.s3;
+  document.getElementById('scope-s1-bar').style.width = Math.round(d.s1/total*100)+'%';
+  document.getElementById('scope-s2-bar').style.width = Math.round(d.s2/total*100)+'%';
+  document.getElementById('scope-s3-bar').style.width = Math.round(d.s3/total*100)+'%';
+  document.getElementById('scope-s1-val').textContent = d.s1.toLocaleString();
+  document.getElementById('scope-s2-val').textContent = d.s2.toLocaleString();
+  document.getElementById('scope-s3-val').textContent = d.s3.toLocaleString();
+  document.getElementById('scope-s1-pct').textContent = (d.s1/total*100).toFixed(1)+'%';
+  document.getElementById('scope-s2-pct').textContent = (d.s2/total*100).toFixed(1)+'%';
+  document.getElementById('scope-s3-pct').textContent = (d.s3/total*100).toFixed(1)+'%';
+
+  // Update year label in subtitle
+  document.querySelectorAll('.yr-label').forEach(el => el.textContent = yr);
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+const pageTitles = {
+  executive: 'Executive <span>Summary</span>',
+  detail: 'Emissions <span>Detail</span>',
+  intensity: 'Operational <span>Intensity</span>',
+  targets: 'Target <span>Progress</span>',
+};
+
+function switchPage(name) {
+  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('pageTitle').innerHTML = pageTitles[name];
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => { if (n.getAttribute('onclick')?.includes(name)) n.classList.add('active'); });
+  document.querySelectorAll('.tab-btn').forEach(b => { if (b.getAttribute('onclick')?.includes(name)) b.classList.add('active'); });
+}
+
+function setYear(year, el) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  activeYear = year;
+  buildCharts(year);
+}
+
+// Init
+buildCharts(2025);
+</script>
+</body>
+</html>
